@@ -23,11 +23,13 @@ body {
     height: auto;
     margin: 0 20px;
     image-rendering: pixelated;
+    animation: hover 3s ease-in-out infinite alternate;
 }
 
 h1 {
-    font-size: 4rem;
-    text-shadow: 4px 4px 0px #1c5c96;
+    font-size: 6rem;
+    text-shadow: 6px 6px 0px #1c5c96;
+    letter-spacing: 0.1em;
 }
 
 h1 span {
@@ -40,4 +42,17 @@ h1 span {
 h1 span.fade {
     opacity: 1;
     transform: translateY(0px);
+}
+
+@keyframes hover {
+    from {
+        transform: translateY(0);
+    }
+    to {
+        transform: translateY(-10px);
+    }
+}
+
+.cloud-icon:last-child {
+    animation-delay: -1.5s;
 }
