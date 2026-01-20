@@ -21,17 +21,19 @@ body {
 }
 
 .cloud-icon {
-    width: 128px;
+    width: clamp(48px, 15vw, 128px);
     height: auto;
-    margin: 0 20px;
+    margin: 0 clamp(5px, 2vw, 20px);
     image-rendering: pixelated;
     animation: hover 3s ease-in-out infinite alternate;
+    flex-shrink: 0;
 }
 
 h1 {
-    font-size: 6rem;
-    text-shadow: 6px 6px 0px #1c5c96;
+    font-size: clamp(2rem, 8vw, 6rem);
+    text-shadow: clamp(2px, 0.5vw, 6px) clamp(2px, 0.5vw, 6px) 0px #1c5c96;
     letter-spacing: 0.1em;
+    white-space: nowrap;
 }
 
 h1 span {
