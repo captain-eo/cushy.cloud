@@ -101,10 +101,10 @@ function createCloud() {
     
     document.body.appendChild(wrapper);
     
-    // Remove after animation
-    setTimeout(() => {
+    // Remove after animation finishes
+    wrapper.addEventListener('animationend', () => {
         wrapper.remove();
-    }, duration * 1000);
+    });
 }
 
 setInterval(createCloud, 2000);
