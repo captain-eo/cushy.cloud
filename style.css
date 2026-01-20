@@ -80,7 +80,7 @@ h1 span.fade {
         transform: translateX(0);
     }
     to {
-        transform: translateX(120vw);
+        transform: translateX(calc(100vw + 600px));
     }
 }
 
