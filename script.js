@@ -85,8 +85,8 @@ function createCloud() {
         </svg>
     `;
     
-    // Randomize size
-    const size = Math.random() * 150 + 50; // 50px to 200px
+    // Randomize size - Bigger clouds (100px to 350px)
+    const size = Math.random() * 250 + 100;
     wrapper.style.width = size + 'px';
     
     // Randomize position
@@ -107,4 +107,5 @@ function createCloud() {
     });
 }
 
-setInterval(createCloud, 2000);
+// Create a cloud every 0.8 seconds (more clouds)
+setInterval(createCloud, 800);
