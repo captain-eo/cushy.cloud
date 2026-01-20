@@ -61,17 +61,24 @@ h1 span.fade {
 
 .flying-cloud {
     position: fixed;
+    left: -300px; /* Start off-screen left */
     pointer-events: none;
     z-index: 1; 
     will-change: transform;
 }
 
+.flying-cloud svg {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+
 @keyframes flyRight {
     from {
-        transform: translateX(-300px);
+        transform: translateX(0);
     }
     to {
-        transform: translateX(110vw);
+        transform: translateX(120vw);
     }
 }
 
