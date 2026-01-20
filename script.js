@@ -81,8 +81,7 @@ function createCloud() {
     // Construct SVG
     wrapper.innerHTML = `
         <svg width="100%" height="100%" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
-            <style> .pixel { fill: ${color}; shape-rendering: crispEdges; } </style>
-            <g class="pixel">${shape}</g>
+            <g fill="${color}" style="shape-rendering: crispEdges;">${shape}</g>
         </svg>
     `;
     
