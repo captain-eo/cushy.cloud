@@ -16,6 +16,8 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
+    position: relative;
+    z-index: 10;
 }
 
 .cloud-icon {
@@ -56,3 +58,20 @@ h1 span.fade {
 .cloud-icon:last-child {
     animation-delay: -1.5s;
 }
+
+.flying-cloud {
+    position: fixed;
+    pointer-events: none;
+    z-index: 1; 
+    will-change: transform;
+}
+
+@keyframes flyRight {
+    from {
+        transform: translateX(-300px);
+    }
+    to {
+        transform: translateX(110vw);
+    }
+}
+
