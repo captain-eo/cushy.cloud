@@ -25,75 +25,73 @@ function complete() {
     timer = null;
 }
 
-// Pixel dimensions on 100x60 viewBox
-const PIXEL_SIZE = 5;
-const GRID_COLS = 20; // 100 / 5
-const GRID_ROWS = 12; // 60 / 5
+// Extra-chunky pixel dimensions on 100x60 viewBox
+const PIXEL_SIZE = 10;
+const GRID_COLS = 10; // 100 / 10
+const GRID_ROWS = 6;  // 60 / 10
 
-// Raw rectangle bounds for cloud shapes [x, y, width, height]
+// Cloud shape blueprints designed for big 10x10 pixel blocks
 const rawShapes = [
-    // Shape 1 (Original Cushy)
+    // Shape 1 (Classic Cushy)
     [
-        [10, 40, 80, 10],
-        [20, 50, 60, 10],
-        [20, 20, 20, 20],
-        [40, 10, 30, 30],
-        [70, 20, 20, 20]
+        "..........",
+        "....###...",
+        "..#######.",
+        "..#######.",
+        ".########.",
+        "..######.."
     ],
-    // Shape 2 (Original Cushy 2)
+    // Shape 2 (Asymmetric Fluffy)
     [
-        [10, 40, 80, 10],
-        [20, 50, 60, 10],
-        [15, 25, 25, 15],
-        [40, 15, 25, 25],
-        [65, 25, 20, 20]
+        "..........",
+        "...###....",
+        ".#######..",
+        ".########.",
+        ".########.",
+        "..######.."
     ],
-    // Shape 3 (Wide Flat)
+    // Shape 3 (Wide Flat Cloud)
     [
-        [5, 40, 90, 10],
-        [15, 50, 70, 10],
-        [10, 25, 30, 15],
-        [40, 20, 40, 20],
-        [75, 30, 15, 10]
+        "..........",
+        "..........",
+        "...#####..",
+        ".########.",
+        "##########",
+        "..######.."
     ],
-    // Shape 4 (Tall Puffy)
+    // Shape 4 (Tall Puffy Cumulus)
     [
-        [20, 40, 60, 10],
-        [30, 50, 40, 10],
-        [20, 20, 20, 20],
-        [40, 5, 20, 35],
-        [60, 20, 20, 20]
+        "....##....",
+        "....##....",
+        "..######..",
+        "..######..",
+        ".########.",
+        "...####..."
+    ],
+    // Shape 5 (Compact / Mellow Cloud)
+    [
+        "..........",
+        ".....##...",
+        "...####...",
+        "..######..",
+        ".########.",
+        "..######.."
     ]
 ];
 
-// Compile shapes into sets of discrete pixel cells
-const cloudShapes = rawShapes.map(rectangles => {
-    const grid = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLS).fill(false));
-    rectangles.forEach(([x, y, w, h]) => {
-        const startR = Math.floor(y / PIXEL_SIZE);
-        const endR = Math.floor((y + h) / PIXEL_SIZE);
-        const startC = Math.floor(x / PIXEL_SIZE);
-        const endC = Math.floor((x + w) / PIXEL_SIZE);
-        for (let r = startR; r < endR; r++) {
-            for (let c = startC; c < endC; c++) {
-                if (r >= 0 && r < GRID_ROWS && c >= 0 && c < GRID_COLS) {
-                    grid[r][c] = true;
-                }
-            }
-        }
-    });
-
+// Compile shapes into sets of discrete big pixel cells
+const cloudShapes = rawShapes.map(asciiRows => {
     const cells = [];
     let minR = GRID_ROWS, maxR = 0;
-    for (let r = 0; r < GRID_ROWS; r++) {
-        for (let c = 0; c < GRID_COLS; c++) {
-            if (grid[r][c]) {
+    asciiRows.forEach((rowStr, r) => {
+        for (let c = 0; c < rowStr.length; c++) {
+            if (rowStr[c] === '#') {
                 cells.push({ c, r });
                 if (r < minR) minR = r;
                 if (r > maxR) maxR = r;
             }
         }
-    }
+    });
     const rowSpan = Math.max(1, maxR - minR);
     return { cells, minR, rowSpan };
 });
@@ -115,12 +113,12 @@ function generateCloudSVG(shape, palette) {
     const pixelRects = shape.cells.map(({ c, r }) => {
         // Subtle vertical lighting gradient (lighter on top, deeper at bottom)
         const relY = (r - shape.minR) / shape.rowSpan;
-        const shadeL = (0.5 - relY) * 16;
+        const shadeL = (0.5 - relY) * 18;
         
         // Randomized per-pixel color jitter
-        const jitterL = (Math.random() - 0.5) * 20;
+        const jitterL = (Math.random() - 0.5) * 22;
         const jitterS = (Math.random() - 0.5) * 16;
-        const jitterH = (Math.random() - 0.5) * 10;
+        const jitterH = (Math.random() - 0.5) * 12;
 
         const h = (palette.h + jitterH + 360) % 360;
         const s = Math.min(100, Math.max(15, palette.s + jitterS));
