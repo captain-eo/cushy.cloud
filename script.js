@@ -25,76 +25,144 @@ function complete() {
     timer = null;
 }
 
-const cloudShapes = [
-    // Shape 1 (Original)
-    `<g>
-        <rect x="10" y="40" width="80" height="10"/>
-        <rect x="20" y="50" width="60" height="10"/>
-        <rect x="20" y="20" width="20" height="20"/>
-        <rect x="40" y="10" width="30" height="30"/>
-        <rect x="70" y="20" width="20" height="20"/>
-    </g>`,
-    // Shape 2 (Original 2)
-    `<g>
-        <rect x="10" y="40" width="80" height="10"/>
-        <rect x="20" y="50" width="60" height="10"/>
-        <rect x="15" y="25" width="25" height="15"/>
-        <rect x="40" y="15" width="25" height="25"/>
-        <rect x="65" y="25" width="20" height="20"/>
-    </g>`,
+// Pixel dimensions on 100x60 viewBox
+const PIXEL_SIZE = 5;
+const GRID_COLS = 20; // 100 / 5
+const GRID_ROWS = 12; // 60 / 5
+
+// Raw rectangle bounds for cloud shapes [x, y, width, height]
+const rawShapes = [
+    // Shape 1 (Original Cushy)
+    [
+        [10, 40, 80, 10],
+        [20, 50, 60, 10],
+        [20, 20, 20, 20],
+        [40, 10, 30, 30],
+        [70, 20, 20, 20]
+    ],
+    // Shape 2 (Original Cushy 2)
+    [
+        [10, 40, 80, 10],
+        [20, 50, 60, 10],
+        [15, 25, 25, 15],
+        [40, 15, 25, 25],
+        [65, 25, 20, 20]
+    ],
     // Shape 3 (Wide Flat)
-    `<g>
-        <rect x="5" y="40" width="90" height="10"/>
-        <rect x="15" y="50" width="70" height="10"/>
-        <rect x="10" y="25" width="30" height="15"/>
-        <rect x="40" y="20" width="40" height="20"/>
-        <rect x="75" y="30" width="15" height="10"/>
-    </g>`,
+    [
+        [5, 40, 90, 10],
+        [15, 50, 70, 10],
+        [10, 25, 30, 15],
+        [40, 20, 40, 20],
+        [75, 30, 15, 10]
+    ],
     // Shape 4 (Tall Puffy)
-    `<g>
-        <rect x="20" y="40" width="60" height="10"/>
-        <rect x="30" y="50" width="40" height="10"/>
-        <rect x="20" y="20" width="20" height="20"/>
-        <rect x="40" y="5" width="20" height="35"/>
-        <rect x="60" y="20" width="20" height="20"/>
-    </g>`
+    [
+        [20, 40, 60, 10],
+        [30, 50, 40, 10],
+        [20, 20, 20, 20],
+        [40, 5, 20, 35],
+        [60, 20, 20, 20]
+    ]
 ];
 
-const retroColors = [
-    '#87CEFA', // Sky Blue (Original)
-    '#FF6EC7', // Neon Pink
-    '#39FF14', // Neon Green
-    '#00FFFF', // Electric Blue
-    '#FFF01F', // Bright Yellow
-    '#B026FF', // Purple
-    '#FF4500'  // Orange
+// Compile shapes into sets of discrete pixel cells
+const cloudShapes = rawShapes.map(rectangles => {
+    const grid = Array.from({ length: GRID_ROWS }, () => Array(GRID_COLS).fill(false));
+    rectangles.forEach(([x, y, w, h]) => {
+        const startR = Math.floor(y / PIXEL_SIZE);
+        const endR = Math.floor((y + h) / PIXEL_SIZE);
+        const startC = Math.floor(x / PIXEL_SIZE);
+        const endC = Math.floor((x + w) / PIXEL_SIZE);
+        for (let r = startR; r < endR; r++) {
+            for (let c = startC; c < endC; c++) {
+                if (r >= 0 && r < GRID_ROWS && c >= 0 && c < GRID_COLS) {
+                    grid[r][c] = true;
+                }
+            }
+        }
+    });
+
+    const cells = [];
+    let minR = GRID_ROWS, maxR = 0;
+    for (let r = 0; r < GRID_ROWS; r++) {
+        for (let c = 0; c < GRID_COLS; c++) {
+            if (grid[r][c]) {
+                cells.push({ c, r });
+                if (r < minR) minR = r;
+                if (r > maxR) maxR = r;
+            }
+        }
+    }
+    const rowSpan = Math.max(1, maxR - minR);
+    return { cells, minR, rowSpan };
+});
+
+// Color palettes for clouds (base HSL values)
+const cloudPalettes = [
+    { name: 'Sky Blue',      h: 203, s: 92,  l: 75 },
+    { name: 'Neon Pink',     h: 323, s: 100, l: 72 },
+    { name: 'Neon Green',    h: 110, s: 100, l: 54 },
+    { name: 'Electric Blue', h: 180, s: 100, l: 50 },
+    { name: 'Bright Yellow', h: 56,  s: 100, l: 56 },
+    { name: 'Purple',        h: 278, s: 100, l: 57 },
+    { name: 'Orange',        h: 16,  s: 100, l: 50 },
+    { name: 'Fluffy White',  h: 210, s: 25,  l: 88 }
 ];
 
-function createCloud() {
+// Generate an SVG where big pixels with slightly different colors make up the cloud
+function generateCloudSVG(shape, palette) {
+    const pixelRects = shape.cells.map(({ c, r }) => {
+        // Subtle vertical lighting gradient (lighter on top, deeper at bottom)
+        const relY = (r - shape.minR) / shape.rowSpan;
+        const shadeL = (0.5 - relY) * 16;
+        
+        // Randomized per-pixel color jitter
+        const jitterL = (Math.random() - 0.5) * 20;
+        const jitterS = (Math.random() - 0.5) * 16;
+        const jitterH = (Math.random() - 0.5) * 10;
+
+        const h = (palette.h + jitterH + 360) % 360;
+        const s = Math.min(100, Math.max(15, palette.s + jitterS));
+        const l = Math.min(96, Math.max(15, palette.l + shadeL + jitterL));
+
+        return `<rect x="${c * PIXEL_SIZE}" y="${r * PIXEL_SIZE}" width="${PIXEL_SIZE}" height="${PIXEL_SIZE}" fill="hsl(${h.toFixed(1)}, ${s.toFixed(1)}%, ${l.toFixed(1)}%)"/>`;
+    }).join('');
+
+    return `
+        <svg width="100%" height="100%" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg" style="shape-rendering: crispEdges;">
+            <g>${pixelRects}</g>
+        </svg>
+    `;
+}
+
+function createCloud(isInitial = false) {
     const wrapper = document.createElement('div');
     wrapper.classList.add('flying-cloud');
     
-    // Pick random shape and color
+    // Pick random shape and color palette
     const shape = cloudShapes[Math.floor(Math.random() * cloudShapes.length)];
-    const color = retroColors[Math.floor(Math.random() * retroColors.length)];
+    const palette = cloudPalettes[Math.floor(Math.random() * cloudPalettes.length)];
     
-    // Construct SVG
-    wrapper.innerHTML = `
-        <svg width="100%" height="100%" viewBox="0 0 100 60" xmlns="http://www.w3.org/2000/svg">
-            <g fill="${color}" style="shape-rendering: crispEdges;">${shape}</g>
-        </svg>
-    `;
+    // Construct pixelated SVG
+    wrapper.innerHTML = generateCloudSVG(shape, palette);
     
     // Randomize size - Bigger clouds (100px to 350px)
     const size = Math.random() * 250 + 100;
     wrapper.style.width = size + 'px';
     
     // Randomize position
-    wrapper.style.top = Math.random() * window.innerHeight + 'px';
+    const maxTop = Math.max(window.innerHeight - 80, 50);
+    wrapper.style.top = Math.random() * maxTop + 'px';
     
     // Randomize speed
     const duration = Math.random() * 15 + 10; // 10s to 25s
     wrapper.style.animation = `flyRight ${duration}s linear`;
+    
+    // If pre-populating on load, randomize position along flight path
+    if (isInitial) {
+        wrapper.style.animationDelay = `-${Math.random() * duration}s`;
+    }
     
     // Randomize z-index
     wrapper.style.zIndex = Math.random() > 0.6 ? 20 : 5;
@@ -107,5 +175,10 @@ function createCloud() {
     });
 }
 
-// Create a cloud every 0.8 seconds (more clouds)
-setInterval(createCloud, 800);
+// Pre-populate some drifting clouds immediately on page load
+for (let i = 0; i < 8; i++) {
+    createCloud(true);
+}
+
+// Continuously spawn new clouds every 0.8 seconds
+setInterval(() => createCloud(false), 800);
