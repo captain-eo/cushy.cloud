@@ -135,6 +135,9 @@ function generateCloudSVG(shape, palette) {
 }
 
 function createCloud(isInitial = false) {
+    if (document.hidden && !isInitial) return;
+    if (document.querySelectorAll('.flying-cloud').length >= 30) return;
+
     const wrapper = document.createElement('div');
     wrapper.classList.add('flying-cloud');
     
@@ -173,10 +176,36 @@ function createCloud(isInitial = false) {
     });
 }
 
+let cloudInterval = null;
+
+function startCloudSpawning() {
+    if (!cloudInterval && !document.hidden) {
+        cloudInterval = setInterval(() => createCloud(false), 800);
+    }
+}
+
+function stopCloudSpawning() {
+    if (cloudInterval) {
+        clearInterval(cloudInterval);
+        cloudInterval = null;
+    }
+}
+
+// Pause animation and stop spawning when the tab is not visible
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        stopCloudSpawning();
+        document.body.classList.add('paused');
+    } else {
+        document.body.classList.remove('paused');
+        startCloudSpawning();
+    }
+});
+
 // Pre-populate some drifting clouds immediately on page load
 for (let i = 0; i < 8; i++) {
     createCloud(true);
 }
 
 // Continuously spawn new clouds every 0.8 seconds
-setInterval(() => createCloud(false), 800);
+startCloudSpawning();

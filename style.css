@@ -69,6 +69,11 @@ h1 span.fade {
     will-change: transform;
 }
 
+body.paused .flying-cloud,
+body.paused .cloud-icon {
+    animation-play-state: paused;
+}
+
 .flying-cloud svg {
     width: 100%;
     height: auto;
